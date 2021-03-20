@@ -5,13 +5,25 @@ import deactivateEnvironment from "./deactivate";
 
 async function run() {
   try {
-    const { repo, ref, sha } = github.context;
+    const { repo: ctxRepo, ref, sha } = github.context;
+
+    /* 
+      this allows for `repository` to be
+      - null/undefined (defaults to current action repo)
+      - repo (defaults owner to same as current action)
+      - owner/repo 
+    */
+    let [
+      repository = ctxRepo.repo,
+      owner = ctxRepo.owner
+    ] = (core.getInput("repository")?.split("/") || []).reverse();
+
     const step = core.getInput("step", { required: true });
     const coreArgs = {
       autoInactive: core.getInput("auto_inactive") !== "false",
       logsURL:
         core.getInput("logs") ||
-        `https://github.com/${repo.owner}/${repo.repo}/commit/${sha}/checks`,
+        `https://github.com/${owner}/${repository}/commit/${sha}/checks`,
       description: core.getInput("desc"),
       logArgs: core.getInput("log_args") === "true",
     };
@@ -43,13 +55,13 @@ async function run() {
 
           // mark existing deployments of this environment as inactive
           if (!args.noOverride) {
-            await deactivateEnvironment(client, repo, args.environment);
+            await deactivateEnvironment(client, owner, repository, args.environment);
           }
 
           if (!deploymentID) {
             const deployment = await client.repos.createDeployment({
-              owner: repo.owner,
-              repo: repo.repo,
+              owner,
+              repo: repository,
               ref: args.gitRef,
               required_contexts: [],
               environment: args.environment,
@@ -66,7 +78,8 @@ async function run() {
           core.setOutput("env", args.environment);
 
           await client.repos.createDeploymentStatus({
-            ...repo,
+            owner,
+            repo: repository,
             deployment_id: parseInt(deploymentID, 10),
             state: "in_progress",
             auto_inactive: coreArgs.autoInactive,
@@ -105,7 +118,8 @@ async function run() {
           const newStatus =
             args.status === "cancelled" ? "inactive" : args.status;
           await client.repos.createDeploymentStatus({
-            ...repo,
+            owner,
+            repo: repository,
             deployment_id: parseInt(args.deploymentID, 10),
             state: newStatus,
             auto_inactive: args.autoInactive,
@@ -131,7 +145,7 @@ async function run() {
             console.log(`'${step}' arguments`, args);
           }
 
-          await deactivateEnvironment(client, repo, args.environment);
+          await deactivateEnvironment(client, owner, repository, args.environment);
         }
         break;
 
