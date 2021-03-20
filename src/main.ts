@@ -105,7 +105,8 @@ async function run() {
           const newStatus =
             args.status === "cancelled" ? "inactive" : args.status;
           await client.repos.createDeploymentStatus({
-            ...repo,
+            owner: "dialohq",
+            repo: "dialo",
             deployment_id: parseInt(args.deploymentID, 10),
             state: newStatus,
             auto_inactive: args.autoInactive,
