@@ -46,3 +46,9 @@ inputs:
     required: false
     description: Whether to mark existing deployments of this environment as inactive
     default: 'true'
+  owner:
+    required: false
+    description: set a different repository owner (optional)
+  repo:
+    required: false
+    description: set a different repository (optional)
