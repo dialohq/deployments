@@ -153,6 +153,7 @@ async function run() {
         core.setFailed(`unknown step type ${step}`);
     }
   } catch (error) {
+    console.error(error);
     core.setFailed(`unexpected error encountered: ${error.message}`);
   }
 }
