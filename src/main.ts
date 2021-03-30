@@ -13,10 +13,11 @@ async function run() {
       - repo (defaults owner to same as current action)
       - owner/repo 
     */
+    const repositoryInput = core.getInput("repository");
     let [
       repository = ctxRepo.repo,
       owner = ctxRepo.owner
-    ] = (core.getInput("repository")?.split("/") || []).reverse();
+    ] = repositoryInput ? repositoryInput.split("/").reverse() : [];
 
     const step = core.getInput("step", { required: true });
     const coreArgs = {
